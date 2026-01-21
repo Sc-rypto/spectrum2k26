@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cold Cones @ BRS SPECTRUM 2K26</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: linear-gradient(180deg, #ffc3a0 0%, #ffafbd 100%);
+            font-family: 'Quicksand', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #4a4a4a;
+        }
+
+        .card {
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 380px;
+            border-radius: 25px;
+            box-shadow: 0 15px 35px rgba(255, 105, 180, 0.25);
+            overflow: hidden; /* Important for the slide up animation */
+            text-align: center;
+            border: 4px solid #fff;
+            position: relative;
+        }
+
+        /* --- HEADER --- */
+        .header {
+            background-color: #fff0f5; 
+            padding: 25px 20px;
+            border-bottom-left-radius: 50% 15px;
+            border-bottom-right-radius: 50% 15px;
+        }
+
+        .event-pill {
+            background: #ff69b4;
+            color: white;
+            padding: 5px 14px;
+            border-radius: 50px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .brand-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .logo { max-width: 50px; height: auto; border-radius: 10px; }
+
+        .brand-name {
+            font-family: 'Fredoka One', cursive;
+            font-size: 1.8rem;
+            color: #ff69b4;
+            text-shadow: 2px 2px 0px #ffd1dc;
+        }
+
+        /* --- COUNTDOWN --- */
+        .timer-container {
+            background: rgba(255, 255, 255, 0.8);
+            margin: 10px 40px;
+            padding: 10px;
+            border-radius: 15px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+        }
+
+        .timer-part { display: flex; flex-direction: column; }
+        .timer-num { font-weight: 800; color: #ff69b4; font-size: 1.1rem; }
+        .timer-label { font-size: 0.6rem; text-transform: uppercase; color: #888; }
+
+        /* --- CONTENT --- */
+        .content { padding: 25px; }
+
+        .instruction-text {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .coupon-box {
+            border: 3px dashed #ffb7c5;
+            background: #fff9fb;
+            border-radius: 15px;
+            padding: 25px 20px 20px 20px;
+            margin-bottom: 20px;
+            position: relative;
+            transition: opacity 0.3s;
+        }
+
+        .ready-badge {
+            position: absolute;
+            top: -12px;
+            right: 10px;
+            background: #4CAF50;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 10px;
+            font-size: 0.65rem;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            animation: pulse 2s infinite;
+            z-index: 5;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .offer-headline {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #ff69b4;
+            text-transform: uppercase;
+        }
+
+        .redeem-btn {
+            background: #ff69b4;
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 15px;
+            font-family: 'Fredoka One', cursive;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #db4c93;
+            margin-bottom: 15px;
+            transition: transform 0.1s;
+        }
+
+        .redeem-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #db4c93; }
+        
+        .redeem-btn:disabled {
+            background: #ccc;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .used-stamp {
+            display: none;
+            color: #d32f2f;
+            border: 4px solid #d32f2f;
+            font-weight: 900;
+            padding: 5px;
+            transform: rotate(-10deg) scale(0);
+            position: absolute;
+            top: 25%;
+            left: 20%;
+            right: 20%;
+            z-index: 10;
+            background: rgba(255,255,255,0.9);
+            border-radius: 5px;
+            animation: stampIn 0.3s forwards;
+        }
+
+        @keyframes stampIn {
+            to { transform: rotate(-10deg) scale(1); }
+        }
+
+        /* --- PIN KEYPAD OVERLAY --- */
+        #pinOverlay {
+            /* Changed from display:none to visibility/transform for animation */
+            display: flex; 
+            visibility: hidden;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.98);
+            z-index: 100;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+            
+            /* Animation Properties */
+            transform: translateY(100%); /* Start hidden below */
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s 0.4s;
+        }
+
+        /* The class added via JS to slide it up */
+        #pinOverlay.active {
+            visibility: visible;
+            transform: translateY(0); /* Slide to normal position */
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s;
+        }
+
+        .pin-display {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            letter-spacing: 10px;
+            color: #ff69b4;
+            height: 40px;
+            transition: color 0.3s, transform 0.2s;
+        }
+
+        .shake-anim { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; color: #d32f2f !important; }
+        .success-anim { color: #4CAF50 !important; transform: scale(1.2); }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(4px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-8px, 0, 0); }
+            40%, 60% { transform: translate3d(8px, 0, 0); }
+        }
+
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            width: 100%;
+            max-width: 250px;
+        }
+
+        .key {
+            background: #f0f0f0;
+            border: none;
+            padding: 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 15px;
+            cursor: pointer;
+            color: #4a4a4a;
+            transition: all 0.1s ease;
+            box-shadow: 0 4px 0 #ddd;
+        }
+
+        .key:active { 
+            background: #ffb7c5; 
+            color: white; 
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #ddd;
+        }
+
+        .key.clear { background: #ffafbd; color: white; box-shadow: 0 4px 0 #d68a96; }
+        .key.clear:active { background: #d68a96; box-shadow: 0 0 0 #d68a96; }
+
+        .footer-text { font-size: 0.7rem; color: #bbb; }
+
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div id="pinOverlay">
+            <p style="font-weight: bold; margin-bottom: 10px;">STAFF CONFIRMATION</p>
+            <div class="pin-display" id="pinDisplay"></div>
+            <div class="keypad">
+                <button class="key" onclick="pressKey('1')">1</button>
+                <button class="key" onclick="pressKey('2')">2</button>
+                <button class="key" onclick="pressKey('3')">3</button>
+                <button class="key" onclick="pressKey('4')">4</button>
+                <button class="key" onclick="pressKey('5')">5</button>
+                <button class="key" onclick="pressKey('6')">6</button>
+                <button class="key" onclick="pressKey('7')">7</button>
+                <button class="key" onclick="pressKey('8')">8</button>
+                <button class="key" onclick="pressKey('9')">9</button>
+                <button class="key clear" onclick="closePin()">✕</button>
+                <button class="key" onclick="pressKey('0')">0</button>
+                <button class="key clear" onclick="clearPin()">←</button>
+            </div>
+            <p style="font-size: 0.7rem; margin-top: 20px; color: #888;">Staff: Enter PIN to confirm redemption</p>
+        </div>
+
+        <div class="header">
+            <div class="event-pill">BRS SPECTRUM 2K26</div>
+            <div class="brand-container">
+                <img src='logo.png' alt="Logo" class="logo">
+                <h1 class="brand-name">Cold Cones</h1>
+            </div>
+            
+            <p style="font-size: 0.7rem; font-weight: bold; color: #888; margin-top: 5px;">OFFER EXPIRES IN:</p>
+            <div class="timer-container" id="countdown">
+                <div class="timer-part"><span class="timer-num" id="days">00</span><span class="timer-label">Day</span></div>
+                <div class="timer-part"><span class="timer-num" id="hours">00</span><span class="timer-label">Hr</span></div>
+                <div class="timer-part"><span class="timer-num" id="mins">00</span><span class="timer-label">Min</span></div>
+                <div class="timer-part"><span class="timer-num" id="secs">00</span><span class="timer-label">Sec</span></div>
+            </div>
+        </div>
+
+        <div class="content">
+            <p class="instruction-text" id="main-text">Show this to the staff at the Cold Cones stall! 🏃</p>
+            
+            <div class="coupon-box" id="coupon">
+                <div class="ready-badge" id="readyBadge">COUPON READY TO CLAIM</div>
+                <div class="used-stamp" id="stamp">ALREADY REDEEMED</div>
+                <div class="offer-headline">Free Premium Toppings</div>
+                <p style="font-size: 0.85rem; color: #888; margin: 8px 0;">✨ Sprinkle some magic! ✨</p>
+                <div style="font-family: monospace; font-weight: bold; background: #eee; padding: 5px; border-radius: 5px;">#BRSSPECTRUMXCOLDCONES2K26</div>
+            </div>
+
+            <button class="redeem-btn" id="redeemBtn" onclick="openPin()">TAP TO REDEEM</button>
+
+            <p class="footer-text">
+                This coupon can only be used once.<br>
+                Valid only on Jan 24, 2026.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        const STAFF_PIN = "4131"; // Set your staff password here
+        let currentPin = "";
+        let isProcessing = false;
+
+        // --- COUNTDOWN LOGIC ---
+        const targetDate = new Date("January 25, 2026 00:00:00").getTime();
+        const timerInterval = setInterval(function() {
+            const now = new Date().getTime();
+            const distance = targetDate - now;
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            document.getElementById("days").innerText = days.toString().padStart(2, '0');
+            document.getElementById("hours").innerText = hours.toString().padStart(2, '0');
+            document.getElementById("mins").innerText = minutes.toString().padStart(2, '0');
+            document.getElementById("secs").innerText = seconds.toString().padStart(2, '0');
+
+            if (distance < 0) {
+                clearInterval(timerInterval);
+                document.getElementById("countdown").innerHTML = "OFFER EXPIRED";
+            }
+        }, 1000);
+
+        // --- PIN KEYPAD LOGIC ---
+        function openPin() {
+            // Adds the 'active' class to trigger the CSS slide-up animation
+            document.getElementById("pinOverlay").classList.add("active");
+        }
+
+        function closePin() {
+            // Removes the 'active' class to trigger slide-down
+            document.getElementById("pinOverlay").classList.remove("active");
+            
+            // Wait for animation to finish (0.4s) before clearing pin visually
+            setTimeout(() => {
+                clearPin();
+            }, 400);
+        }
+
+        function clearPin() {
+            currentPin = "";
+            const display = document.getElementById("pinDisplay");
+            display.classList.remove("shake-anim", "success-anim");
+            updatePinDisplay();
+        }
+
+        function pressKey(num) {
+            if (isProcessing) return; 
+
+            if (currentPin.length < 4) {
+                currentPin += num;
+                updatePinDisplay();
+                
+                if (currentPin.length === 4) {
+                    isProcessing = true;
+                    setTimeout(validatePin, 300);
+                }
+            }
+        }
+
+        function updatePinDisplay() {
+            const display = document.getElementById("pinDisplay");
+            display.innerText = "•".repeat(currentPin.length);
+        }
+
+        function validatePin() {
+            const display = document.getElementById("pinDisplay");
+
+            if (currentPin === STAFF_PIN) {
+                // --- SUCCESS ---
+                display.classList.add("success-anim");
+                localStorage.setItem("coldConesRedeemed", "true");
+                
+                // Confetti Effect
+                confetti({
+                    particleCount: 150,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    zIndex: 9999
+                });
+
+                setTimeout(() => {
+                    disableCoupon();
+                    closePin();
+                    isProcessing = false;
+                }, 1500);
+
+            } else {
+                // --- FAILURE ---
+                display.classList.add("shake-anim");
+                if (navigator.vibrate) navigator.vibrate(200);
+
+                setTimeout(() => {
+                    clearPin();
+                    isProcessing = false;
+                }, 500);
+            }
+        }
+
+        // --- REDEMPTION LOGIC ---
+        function checkRedemption() {
+            if (localStorage.getItem("coldConesRedeemed") === "true") {
+                disableCoupon();
+            }
+        }
+
+        function disableCoupon() {
+            document.getElementById("stamp").style.display = "block";
+            document.getElementById("readyBadge").style.display = "none";
+            document.getElementById("coupon").style.opacity = "0.5";
+            document.getElementById("redeemBtn").disabled = true;
+            document.getElementById("redeemBtn").innerText = "REDEEMED ✓";
+            document.getElementById("main-text").innerText = "This coupon has already been used! 🍦";
+        }
+
+        checkRedemption();
+    </script>
+</body>
+</html>
